@@ -46,7 +46,7 @@ class Talk2Car(data.Dataset):
         self,
         root,
         split,
-        vocabulary="/home/kanishk/vigil/kl_network/dataloader/vocabulary.txt",
+        vocabulary="/home/kanishk/vigil/autonomous_grounding/dataloader/vocabulary.txt",
         transform=None,
         mask_transform=None,
         glove_path="",
@@ -56,7 +56,7 @@ class Talk2Car(data.Dataset):
         self.split = split
 
         with open(
-            "/home/kanishk/vigil/kl_network/dataloader/talk2car_w_rpn_no_duplicates.json",
+            "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_w_rpn_no_duplicates.json",
             "rb",
         ) as f:
             data = json.load(f)[self.split]
