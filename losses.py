@@ -60,6 +60,18 @@ class Kl_Divergence:
         
         return torch.mean(torch.sum(result, 1))
 
+def weighted_bce(output, target, weights=None):
+        
+    if weights is not None:
+        assert len(weights) == 2
+        
+        loss = weights[1] * (target * torch.log(output)) + \
+               weights[0] * ((1 - target) * torch.log(1 - output))
+    else:
+        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
+
+    return torch.neg(torch.mean(loss))
+
 class Loss:
     def __init__(self, args):
 
@@ -82,9 +94,10 @@ class Loss:
         if "l1" in self.args.loss:
             loss += self.l1_loss(inputs, targets)
         if "bce" in self.args.loss:
-            loss += self.bce_loss(inputs, targets)
-            # inputs = torch.clamp(inputs, 1e-7, 1 - 1e-7)
-            # loss += (-0.7*targets*torch.log(inputs) -0.3*(1 - targets)*torch.log(1 - inputs)).mean()
+            # loss += self.bce_loss(inputs, targets)
+            inputs = torch.clamp(inputs, 1e-5, 0.99)
+            loss += (-0.75*targets*torch.log(inputs) -0.25*(1 - targets)*torch.log(1 - inputs)).mean()
+            # loss += weighted_bce(inputs, targets, [0.75, 0.25])
         if "mse" in self.args.loss:
             loss += self.mse_loss(inputs, targets)
         if loss == 0:

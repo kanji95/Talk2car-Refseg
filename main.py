@@ -457,7 +457,7 @@ def main(args):
             print_(f"Current Run Name {args.run_name}")
             best_acc_filename = os.path.join(
                 save_path,
-                f"{args.image_encoder}_{args.dataset}_{args.run_name}_{best_acc:.5f}.pth",
+                f"{args.image_encoder}_{args.run_name}_{args.loss}_{best_acc:.5f}.pth",
             )
             os.rename(model_filename, best_acc_filename)
 
