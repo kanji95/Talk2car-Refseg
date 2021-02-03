@@ -74,7 +74,7 @@ def evaluate(
         iou_accuracy = total_inter/total_union
         iou_score = inter / union
         ## iou_accuracy += (iou_score > 0.5).sum()/batch_size
-        total_accuracy += compute_point_game(mask, gt_mask)
+        total_accuracy += compute_point_game(mask, gt_mask, topk=args.topk)
 
         total_loss += float(loss.item())
 

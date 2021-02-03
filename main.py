@@ -151,6 +151,7 @@ def get_args_parser():
     parser.add_argument("--seq_len", type=int, default=20)
 
     parser.add_argument("--threshold", type=float, default=0.40)
+    parser.add_argument("--topk", type=int, default=1)
 
     return parser
 
