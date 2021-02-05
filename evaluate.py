@@ -83,7 +83,7 @@ def evaluate(
                 image_ids,
                 title="val",
                 k=4,
-                threshold=args.threshold,
+                threshold=args.mask_thresh,
             )
 
         if step % 50 == 0:
@@ -106,6 +106,6 @@ def evaluate(
 
     timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
     print_(
-        f"{timestamp} Validation: EpochId: {epochId:2d} loss {val_loss:.4f} IOU {val_IOU_acc:.4f} Accuracy {val_acc:.4f}"
+        f"{timestamp} Validation: EpochId: {epochId:2d} loss {val_loss:.4f} IOU {val_IOU:.4f} Accuracy {val_acc:.4f}"
     )
     return val_loss, val_IOU, val_acc

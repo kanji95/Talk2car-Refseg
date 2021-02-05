@@ -33,7 +33,7 @@ def intersection_at_t(masks, target, mask_thresh=0.3, area_thresh=0.5):
 def pointing_game(masks, target, topk=1):
     assert target.shape[-2:] == masks.shape[-2:]
     batch_size = masks.shape[0]
-    max_indices = masks.flatten(1).argmax(dim=-1)
+    max_indices = masks.flatten(1).argmax(dim=-1)[:, None]
     accuracy = target.flatten(1).gather(1, max_indices).mean().item()
     return accuracy
 
@@ -42,6 +42,8 @@ def recall_at_k(masks, target, topk=1):
     assert target.shape[-2:] == masks.shape[-2:]
     batch_size = masks.shape[0]
     values, indices = torch.topk(masks.flatten(1), k=topk)
+    if topk == 1:
+        indices = indices.unsqueeze(1)
     target_values = target.flatten(1).gather(1, indices).sum(dim=-1)
     accuracy = (target_values > 0).float().mean().item()
     return accuracy
