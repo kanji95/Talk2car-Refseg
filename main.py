@@ -210,9 +210,9 @@ def main(args):
     elif args.image_encoder == "deeplabv3_plus":
         in_channels = 2048
         stride = 2
-        model = DeepLab(num_classes=21, backbone="resnet", output_stride=16)
+        model = DeepLab(num_classes=19, backbone="resnet", output_stride=16)
         model.load_state_dict(
-            torch.load("./models/deeplab-resnet.pth.tar")["state_dict"]
+            torch.load("./models/model_best.pth.tar")["state_dict"]
         )
         image_encoder = IntermediateLayerGetter(model.backbone, return_layers)
     else:
@@ -256,6 +256,7 @@ def main(args):
     ## Initialize Optimizers
     param_dicts = [
         {"params": [p for p in joint_model.parameters() if p.requires_grad]},
+        ## {"params": [p for p in image_encoder.parameters() if p.requires_grad]},
     ]
 
     if args.optimizer == "Adam":

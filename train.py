@@ -89,10 +89,10 @@ def train(
         with torch.no_grad():
             inter, union = compute_batch_IOU(mask, gt_mask, threshold)
 
-        total_inter += inter.sum().item()
-        total_union += union.sum().item()
+        ## total_inter += inter.sum().item()
+        ## total_union += union.sum().item()
 
-        iou_accuracy = total_inter/total_union
+        ## iou_accuracy = total_inter/total_union
         ## iou_score = inter / union
         ## iou_accuracy += (iou_score > 0.5).sum()/batch_size
 
@@ -109,7 +109,7 @@ def train(
 
             curr_loss = total_loss / (step + 1)
             # curr_IOU = total_inter / total_union
-            curr_IOU = iou_accuracy / (step + 1)
+            curr_IOU = 0 ## iou_accuracy / (step + 1)
             curr_acc = total_accuracy / (step + 1)
  
             lr = optimizer.param_groups[0]["lr"]
@@ -124,7 +124,7 @@ def train(
 
     train_loss = total_loss / data_len
     train_accuracy = total_accuracy / data_len
-    total_IOU_acc = iou_accuracy / data_len
+    total_IOU_acc = 0 # iou_accuracy / data_len
     ## overall_IOU = total_inter / total_union
 
     experiment.log({"loss": train_loss, "IOU": total_IOU_acc, "Accuracy": train_accuracy})

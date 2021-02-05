@@ -28,7 +28,7 @@ from losses import Loss
 from models.model import JointModel
 from utils import im_processing
 from utils.utils import log_gpu_usage, print_
-from utils.metrics import compute_mask_IOU
+from utils.metrics import compute_mask_IOU, compute_batch_IOU
 
 
 def get_args_parser():
@@ -66,7 +66,7 @@ def get_args_parser():
         "--task",
         default="unc",
         type=str,
-        choices=["unc", "unc+", "gref", "referit"],
+        choices=["unc", "unc+", "gref", "referit", "talk2car"],
     )
     parser.add_argument("--split", default="val", type=str)
     parser.add_argument("--cache_type", type=str, default="full")
@@ -84,6 +84,8 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
     total_inter = 0
     total_union = 0
+
+    total_accuracy = 0
 
     total_dcrf_inter, total_dcrf_union = 0, 0
 
@@ -147,7 +149,10 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
             dcrf_output_mask = torch.from_numpy(pred_raw_dcrf).unsqueeze(0)
 
-        inter, union = compute_mask_IOU(output_mask, gt_mask, args.threshold)
+        inter, union = compute_batch_IOU(output_mask, gt_mask, args.threshold)
+
+        accuracy = (inter > 0.4*union).sum().item()/batch_size
+        total_accuracy += accuracy
 
         total_inter += inter.item()
         total_union += union.item()
@@ -184,13 +189,15 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         if step % 500 == 0:
 
             timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
+            curr_acc = total_accuracy / (step + 1)
 
             print_(
-                f"{timestamp} Step: [{step:5d}/{data_len}] IOU {total_score:.5f} dcrf_IOU {total_dcrf_score}"
+                    f"{timestamp} Step: [{step:5d}/{data_len}] curr_ACC {curr_acc:.5f} IOU {total_score:.5f} dcrf_IOU {total_dcrf_score}"
             )
 
     overall_IOU = total_inter / total_union
     mean_IOU = mean_IOU / data_len
+    final_acc = total_accuracy / data_len
 
     overall_dcrf_IOU = 0
     if args.use_dcrf:
@@ -198,7 +205,7 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         mean_dcrf_IOU = mean_dcrf_IOU / data_len
 
     print_(
-        f"Overall IOU: {overall_IOU}, Mean_IOU: {mean_IOU}, Overall_dcrf_IOU: {overall_dcrf_IOU}, Mean_dcrf_IOU: {mean_dcrf_IOU}"
+            f"Final Accuracy {final_acc}, Overall IOU: {overall_IOU}, Mean_IOU: {mean_IOU}, Overall_dcrf_IOU: {overall_dcrf_IOU}, Mean_dcrf_IOU: {mean_dcrf_IOU}"
     )
 
     for x in prec_at_x:
@@ -249,6 +256,7 @@ def main():
             glove_path=args.glove_path,
             max_len=args.seq_len,
         )
+        args.task = "talk2car"
     else:
         raise NotImplementedError("Dataset not implemented")
 

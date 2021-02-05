@@ -71,9 +71,13 @@ def evaluate(
 
         ## import pdb; pdb.set_trace();
 
-        iou_accuracy = total_inter/total_union
-        iou_score = inter / union
+        ## iou_accuracy = total_inter/total_union
+        ## iou_score = inter / union
         ## iou_accuracy += (iou_score > 0.5).sum()/batch_size
+
+        ## accuracy = (inter > 0.4*union).sum().item()/batch_size
+
+        ## total_accuracy += accuracy
         total_accuracy += compute_point_game(mask, gt_mask, topk=args.topk)
 
         total_loss += float(loss.item())
@@ -97,7 +101,8 @@ def evaluate(
             curr_loss = total_loss / (step + 1)
             ## import pdb; pdb.set_trace();
             ## overall_IOU = total_inter / total_union
-            curr_IOU = iou_accuracy / (step + 1)
+            ## curr_IOU = iou_accuracy / (step + 1)
+            curr_IOU = 0
             curr_acc = total_accuracy / (step + 1)
 
             print_(
@@ -105,7 +110,7 @@ def evaluate(
             )
 
     val_loss = total_loss / data_len
-    val_IOU_acc = iou_accuracy / data_len
+    val_IOU_acc = 0 ## iou_accuracy / data_len
     val_acc = total_accuracy / data_len
 
     # val_acc = mean_IOU/data_len

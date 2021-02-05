@@ -46,6 +46,11 @@ def adjust_learning_rate(optimizer, epoch, init_lr):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
+def compute_centroid(x, topk=10): 
+    values, indices = torch.topk(x.flatten(1), k=topk) 
+    centroid = (values * indices).sum(dim=-1)/values.sum(dim=-1) 
+    return centroid
+
 @torch.no_grad()
 def grad_check(named_parameters, experiment):
     thresh = 0.001

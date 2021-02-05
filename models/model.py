@@ -120,7 +120,7 @@ class JointModel(nn.Module):
             ),
             ## nn.Hardsigmoid(),
             nn.Sigmoid(),
-			## nn.Tanh(),
+	    ## nn.Tanh(),
         )
 
         self.dropout = nn.Dropout(dropout)
