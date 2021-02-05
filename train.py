@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from utils.utils import print_, grad_check
-from utils.metrics import compute_mask_IOU, compute_batch_IOU, compute_point_game
+from utils.metrics import *
 
 
 def train(
@@ -28,22 +28,15 @@ def train(
 
     joint_model.train()
     image_encoder.eval()
+    optimizer.zero_grad()
 
     total_loss = 0
     total_accuracy = 0
-    iou_accuracy = 0
-
     total_inter, total_union = 0, 0
-
-    criterion = nn.CrossEntropyLoss()
 
     feature_dim = 14
 
-    optimizer.zero_grad()
-
     epoch_start = time()
-
-    # import pdb; pdb.set_trace()
 
     data_len = len(train_loader)
     for step, batch in enumerate(train_loader):
@@ -83,20 +76,12 @@ def train(
         end_time = time()
         elapsed_time = end_time - start_time
 
-        ## import pdb; pdb.set_trace();
-        ## mask_mean = mask.mean().item()
-        threshold = args.threshold ## min(mask_mean, args.threshold)
-        with torch.no_grad():
-            inter, union = compute_batch_IOU(mask, gt_mask, threshold)
+        inter, union = compute_batch_IOU(mask, gt_mask, mask_thresh=args.mask_thresh)
+        
+        total_inter += inter.sum().item()
+        total_union += union.sum().item()
 
-        ## total_inter += inter.sum().item()
-        ## total_union += union.sum().item()
-
-        ## iou_accuracy = total_inter/total_union
-        ## iou_score = inter / union
-        ## iou_accuracy += (iou_score > 0.5).sum()/batch_size
-
-        total_accuracy += compute_point_game(mask, gt_mask, topk=args.topk)
+        total_accuracy += pointing_game(mask, gt_mask, topk=args.topk)
 
         total_loss += float(loss.item())
 
@@ -108,10 +93,9 @@ def train(
             timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
 
             curr_loss = total_loss / (step + 1)
-            # curr_IOU = total_inter / total_union
-            curr_IOU = 0 ## iou_accuracy / (step + 1)
+            curr_IOU = total_inter / total_union
             curr_acc = total_accuracy / (step + 1)
- 
+
             lr = optimizer.param_groups[0]["lr"]
 
             print_(
@@ -120,15 +104,17 @@ def train(
 
     epoch_end = time()
     epoch_time = epoch_end - epoch_start
+    
     timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
 
     train_loss = total_loss / data_len
+    train_IOU = total_inter / total_union
     train_accuracy = total_accuracy / data_len
-    total_IOU_acc = 0 # iou_accuracy / data_len
-    ## overall_IOU = total_inter / total_union
 
-    experiment.log({"loss": train_loss, "IOU": total_IOU_acc, "Accuracy": train_accuracy})
+    experiment.log(
+        {"train_loss": train_loss, "train_IOU": train_IOU, "train_Accuracy": train_accuracy}
+    )
 
     print_(
-        f"{timestamp} FINISHED Epoch:{epochId:2d} loss {train_loss:.4f} IOU_accuracy {total_IOU_acc:.4f} accuracy {train_accuracy:.4f} elapsed {epoch_time:.2f}"
+        f"{timestamp} FINISHED Epoch:{epochId:2d} loss {train_loss:.4f} IOU {train_IOU:.4f} Accuracy {train_accuracy:.4f} elapsed {epoch_time:.2f}"
     )

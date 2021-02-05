@@ -115,9 +115,7 @@ def get_args_parser():
     parser.add_argument("--model_dir", type=str, default="./saved_model")
     parser.add_argument("--save", default=False, action="store_true")
 
-    ## Evalute??
-    parser.add_argument("--inference", default=False, action="store_true")
-    parser.add_argument("--model_filename", default="model_unc.pth", type=str)
+    parser.add_argument("--model_filename", default="model_talk2car.pth", type=str)
 
     # LOSS Params
     parser.add_argument("--loss", default="bce", type=str)
@@ -135,7 +133,7 @@ def get_args_parser():
     )
     parser.add_argument(
         "--task",
-        default="unc",
+        default="talk2car",
         type=str,
         choices=[
             "talk2car",
@@ -150,7 +148,8 @@ def get_args_parser():
     parser.add_argument("--mask_dim", type=int, default=448)
     parser.add_argument("--seq_len", type=int, default=20)
 
-    parser.add_argument("--threshold", type=float, default=0.40)
+    parser.add_argument("--mask_thresh", type=float, default=0.40)
+    parser.add_argument("--area_thresh", type=float, default=0.50)
     parser.add_argument("--topk", type=int, default=1)
 
     return parser
@@ -210,10 +209,8 @@ def main(args):
     elif args.image_encoder == "deeplabv3_plus":
         in_channels = 2048
         stride = 2
-        model = DeepLab(num_classes=19, backbone="resnet", output_stride=16)
-        model.load_state_dict(
-            torch.load("./models/model_best.pth.tar")["state_dict"]
-        )
+        model = DeepLab(num_classes=21, backbone="resnet", output_stride=16)
+        model.load_state_dict(torch.load("./models/deeplab-resnet.pth.tar")["state_dict"])
         image_encoder = IntermediateLayerGetter(model.backbone, return_layers)
     else:
         raise NotImplemented("Model not implemented")
@@ -282,186 +279,175 @@ def main(args):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    if args.inference:
-        model_filename = os.path.join(save_path, args.model_filename)
-        joint_model.load_state_dict(torch.load(model_filename))
-        with torch.no_grad():
-            evaluate_after_training(
-                joint_model, image_encoder, loss_func, experiment, args
-            )
+    model_filename = os.path.join(
+        save_path,
+        f'{args.image_encoder}_{datetime.now().strftime("%d_%b_%H-%M")}.pth',
+    )
+
+    ######################## Dataset Loading ########################
+    print_("Initializing dataset")
+    start = time()
+
+    normalize = transforms.Normalize(
+        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+    )
+    to_tensor = transforms.ToTensor()
+    resize = transforms.Resize((args.image_dim, args.image_dim))
+    random_grayscale = transforms.RandomGrayscale(p=0.3)
+
+    if args.dataset == "referit":
+        train_dataset = ReferDataset(
+            data_root=args.dataroot,
+            dataset=args.task,
+            transform=transforms.Compose(
+                [resize, random_grayscale, to_tensor, normalize]
+            ),
+            annotation_transform=transforms.Compose(
+                [ResizeAnnotation(args.mask_dim)]
+            ),
+            split="train",
+            max_query_len=args.seq_len,
+            glove_path=args.glove_path,
+        )
+        val_dataset = ReferDataset(
+            data_root=args.dataroot,
+            dataset=args.task,
+            transform=transforms.Compose([resize, to_tensor, normalize]),
+            annotation_transform=transforms.Compose(
+                [ResizeAnnotation(args.mask_dim)]
+            ),
+            split="val",
+            max_query_len=args.seq_len,
+            glove_path=args.glove_path,
+        )
+    elif args.dataset == "talk2car":
+        train_dataset = Talk2Car(
+            root=args.dataroot,
+            split="train",
+            transform=transforms.Compose(
+                [resize, random_grayscale, to_tensor, normalize]
+            ),
+            mask_transform=transforms.Compose([ResizeAnnotation(args.mask_dim)]),
+            glove_path=args.glove_path,
+            max_len=args.seq_len,
+        )
+        ## train_dataset, val_dataset = torch.utils.data.random_split(temp_dataset, [8000, 349])
+        val_dataset = Talk2Car(
+            root=args.dataroot,
+            split="val",
+            transform=transforms.Compose([resize, to_tensor, normalize]),
+            mask_transform=transforms.Compose([ResizeAnnotation(args.mask_dim)]),
+            glove_path=args.glove_path,
+            max_len=args.seq_len,
+        )
     else:
+        raise NotImplementedError("Dataset not implemented")
 
-        model_filename = os.path.join(
-            save_path,
-            f'{args.image_encoder}_{datetime.now().strftime("%d_%b_%H-%M")}.pth',
-        )
+    end = time()
+    elapsed = end - start
+    print_(f"Elapsed time for loading dataset is {elapsed}sec")
 
-        ######################## Dataset Loading ########################
-        print_("Initializing dataset")
-        start = time()
+    start = time()
 
-        normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
-        to_tensor = transforms.ToTensor()
-        resize = transforms.Resize((args.image_dim, args.image_dim))
-        random_grayscale = transforms.RandomGrayscale(p=0.3)
+    train_sampler = RandomSampler(train_dataset)
 
-        if args.dataset == "referit":
-            train_dataset = ReferDataset(
-                data_root=args.dataroot,
-                dataset=args.task,
-                transform=transforms.Compose(
-                    [resize, random_grayscale, to_tensor, normalize]
-                ),
-                annotation_transform=transforms.Compose(
-                    [ResizeAnnotation(args.mask_dim)]
-                ),
-                split="train",
-                max_query_len=args.seq_len,
-                glove_path=args.glove_path,
-            )
-            val_dataset = ReferDataset(
-                data_root=args.dataroot,
-                dataset=args.task,
-                transform=transforms.Compose([resize, to_tensor, normalize]),
-                annotation_transform=transforms.Compose(
-                    [ResizeAnnotation(args.mask_dim)]
-                ),
-                split="val",
-                max_query_len=args.seq_len,
-                glove_path=args.glove_path,
-            )
-        elif args.dataset == "talk2car":
-            train_dataset = Talk2Car(
-                root=args.dataroot,
-                split="train",
-                transform=transforms.Compose(
-                    [resize, random_grayscale, to_tensor, normalize]
-                ),
-                mask_transform=transforms.Compose([ResizeAnnotation(args.mask_dim)]),
-                glove_path=args.glove_path,
-                max_len=args.seq_len,
-            )
-            ## train_dataset, val_dataset = torch.utils.data.random_split(temp_dataset, [8000, 349])
-            val_dataset = Talk2Car(
-                root=args.dataroot,
-                split="val",
-                transform=transforms.Compose([resize, to_tensor, normalize]),
-                mask_transform=transforms.Compose([ResizeAnnotation(args.mask_dim)]),
-                glove_path=args.glove_path,
-                max_len=args.seq_len,
-            )
-        else:
-            raise NotImplementedError("Dataset not implemented")
+    train_loader = DataLoader(
+        train_dataset,
+        sampler=train_sampler,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        pin_memory=True,
+        drop_last=True,
+    )
 
-        end = time()
-        elapsed = end - start
-        print_(f"Elapsed time for loading dataset is {elapsed}sec")
+    val_loader = DataLoader(
+        val_dataset,
+        shuffle=False,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        pin_memory=True,
+    )
+    end = time()
+    elapsed = end - start
+    print_(f"Elapsed time for loading dataloader is {elapsed}sec")
 
-        start = time()
+    # Learning Rate Scheduler
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        factor=args.power_factor,
+        patience=2,
+        threshold=1e-3,
+        min_lr=1e-8,
+        verbose=True,
+    )
 
-        train_sampler = RandomSampler(train_dataset)
+    num_iter = len(train_loader)
+    print_(f"training iterations {num_iter}")
 
-        train_loader = DataLoader(
-            train_dataset,
-            sampler=train_sampler,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
-            pin_memory=True,
-            drop_last=True,
-        )
+    print_(
+        f"===================== SAVING MODEL TO FILE {model_filename}! ====================="
+    )
 
-        val_loader = DataLoader(
-            val_dataset,
-            shuffle=False,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
-            pin_memory=True,
-        )
-        end = time()
-        elapsed = end - start
-        print_(f"Elapsed time for loading dataloader is {elapsed}sec")
+    best_acc = 0
+    epochs_without_improvement = 0
 
-        # Learning Rate Scheduler
-        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    for epochId in range(args.epochs):
+
+        train(
+            train_loader,
+            joint_model,
+            image_encoder,
             optimizer,
-            factor=args.power_factor,
-            patience=2,
-            threshold=1e-3,
-            min_lr=1e-8,
-            verbose=True,
+            loss_func,
+            experiment,
+            epochId,
+            args,
         )
 
-        num_iter = len(train_loader)
-        print_(f"training iterations {num_iter}")
-
-        print_(
-            f"===================== SAVING MODEL TO FILE {model_filename}! ====================="
+        val_loss, val_IOU, val_acc = evaluate(
+            val_loader,
+            joint_model,
+            image_encoder,
+            loss_func,
+            experiment,
+            epochId,
+            args,
         )
 
-        best_acc = 0
+        wandb.log({"val_loss": val_loss, "val_IOU": val_IOU, "val_acc": val_acc})
 
-        epochs_without_improvement = 0
+        lr_scheduler.step(val_loss)
 
-        # import pdb;pdb.set_trace()
-        for epochId in range(args.epochs):
-
-            train(
-                train_loader,
-                joint_model,
-                image_encoder,
-                optimizer,
-                loss_func,
-                experiment,
-                epochId,
-                args,
+        if val_acc > best_acc and args.save:
+            best_acc = val_acc
+            print_(
+                f"Saving Checkpoint at epoch {epochId}, best validation accuracy is {best_acc}!"
             )
-
-            val_loss, val_IOU, val_acc = evaluate(
-                val_loader,
-                joint_model,
-                image_encoder,
-                loss_func,
-                experiment,
-                epochId,
-                args,
+            torch.save(
+                {
+                    "epoch": epochId,
+                    "state_dict": joint_model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                },
+                model_filename,
             )
+            epochs_without_improvement = 0
+        elif val_acc < best_acc and epochId != args.epochs - 1:
+            epochs_without_improvement += 1
+            print_(f"Epochs without Improvement: {epochs_without_improvement}")
 
-            wandb.log({"val_loss": val_loss, "val_IOU": val_IOU, "val_acc": val_acc})
-
-            lr_scheduler.step(val_loss)
-
-            if val_acc > best_acc and args.save:
-                best_acc = val_acc
+            if epochs_without_improvement == 8:
                 print_(
-                    f"Saving Checkpoint at epoch {epochId}, best validation accuracy is {best_acc}!"
+                    f"{epochs_without_improvement} epochs without improvement, Stopping Training!"
                 )
-                torch.save(
-                    {
-                        "epoch": epochId,
-                        "state_dict": joint_model.state_dict(),
-                        "optimizer": optimizer.state_dict(),
-                    },
-                    model_filename,
-                )
-                epochs_without_improvement = 0
-            elif val_acc < best_acc and epochId != args.epochs - 1:
-                epochs_without_improvement += 1
-                print_(f"Epochs without Improvement: {epochs_without_improvement}")
-
-                if epochs_without_improvement == 8:
-                    print_(
-                        f"{epochs_without_improvement} epochs without improvement, Stopping Training!"
-                    )
-                    break
-        if args.save:
-            print_(f"Current Run Name {args.run_name}")
-            best_acc_filename = os.path.join(
-                save_path,
-                f"{args.image_encoder}_{args.run_name}_{args.loss}_{best_acc:.5f}.pth",
-            )
-            os.rename(model_filename, best_acc_filename)
+                break
+    if args.save:
+        print_(f"Current Run Name {args.run_name}")
+        best_acc_filename = os.path.join(
+            save_path,
+            f"{args.image_encoder}_{args.run_name}_{args.loss}_{best_acc:.5f}.pth",
+        )
+        os.rename(model_filename, best_acc_filename)
 
 
 if __name__ == "__main__":

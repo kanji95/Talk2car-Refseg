@@ -28,7 +28,7 @@ from losses import Loss
 from models.model import JointModel
 from utils import im_processing
 from utils.utils import log_gpu_usage, print_
-from utils.metrics import compute_mask_IOU, compute_batch_IOU
+from utils.metrics import *
 
 
 def get_args_parser():
@@ -55,7 +55,9 @@ def get_args_parser():
     parser.add_argument("--loss", default="bce", type=str)
 
     # DATASET parameters
-    parser.add_argument("--dataset", type=str, default="referit", choices=["referit", "talk2car"])
+    parser.add_argument(
+        "--dataset", type=str, default="referit", choices=["referit", "talk2car"]
+    )
     parser.add_argument(
         "--dataroot", type=str, default="/ssd_scratch/cvit/kanishk/referit/"
     )
@@ -73,6 +75,10 @@ def get_args_parser():
     parser.add_argument("--seq_len", type=int, default=20)
     parser.add_argument("--image_dim", type=int, default=448)
     parser.add_argument("--mask_dim", type=int, default=56)
+    
+    parser.add_argument("--mask_thresh", type=float, default=0.40)
+    parser.add_argument("--area_thresh", type=float, default=0.50)
+    parser.add_argument("--topk", type=int, default=1)
 
     return parser
 
@@ -118,12 +124,10 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         output_mask = joint_model(img, phrase, img_mask, phrase_mask)
         output_mask = output_mask.detach().cpu()
 
-        # import pdb; pdb.set_trace()
         if args.use_dcrf:
 
             orig_image = batch["orig_image"].numpy()
             proc_im = skimage.img_as_ubyte(orig_image)[0]
-            # orig_image = np.uint8(orig_image * 255)
 
             H, W = orig_image[0].shape[:-1]
 
@@ -135,14 +139,14 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
             U = np.expand_dims(-np.log(sigma_val), axis=0)
             U_ = np.expand_dims(-np.log(1 - sigma_val), axis=0)
-            
+
             unary = np.concatenate((U_, U), axis=0)
             unary = unary.reshape((2, -1))
             d.setUnaryEnergy(unary)
-            
+
             d.addPairwiseGaussian(sxy=3, compat=5)
             d.addPairwiseBilateral(sxy=20, srgb=3, rgbim=proc_im, compat=10)
-            
+
             Q = d.inference(5)
 
             pred_raw_dcrf = np.argmax(Q, axis=0).reshape((H, W)).astype(np.float32)
@@ -151,11 +155,10 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
         inter, union = compute_batch_IOU(output_mask, gt_mask, args.threshold)
 
-        accuracy = (inter > 0.4*union).sum().item()/batch_size
-        total_accuracy += accuracy
+        total_inter += inter.sum().item()
+        total_union += union.sum().item()
 
-        total_inter += inter.item()
-        total_union += union.item()
+        total_accuracy += pointing_game(mask, gt_mask, topk=args.topk)
 
         score = 0 if union.item() == 0 else inter.item() / union.item()
 
@@ -192,7 +195,7 @@ def evaluate(image_encoder, joint_model, val_loader, args):
             curr_acc = total_accuracy / (step + 1)
 
             print_(
-                    f"{timestamp} Step: [{step:5d}/{data_len}] curr_ACC {curr_acc:.5f} IOU {total_score:.5f} dcrf_IOU {total_dcrf_score}"
+                f"{timestamp} Step: [{step:5d}/{data_len}] curr_ACC {curr_acc:.5f} IOU {total_score:.5f} dcrf_IOU {total_dcrf_score}"
             )
 
     overall_IOU = total_inter / total_union
@@ -205,7 +208,7 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         mean_dcrf_IOU = mean_dcrf_IOU / data_len
 
     print_(
-            f"Final Accuracy {final_acc}, Overall IOU: {overall_IOU}, Mean_IOU: {mean_IOU}, Overall_dcrf_IOU: {overall_dcrf_IOU}, Mean_dcrf_IOU: {mean_dcrf_IOU}"
+        f"Final Accuracy {final_acc}, Overall IOU: {overall_IOU}, Mean_IOU: {mean_IOU}, Overall_dcrf_IOU: {overall_dcrf_IOU}, Mean_dcrf_IOU: {mean_dcrf_IOU}"
     )
 
     for x in prec_at_x:
@@ -260,7 +263,6 @@ def main():
     else:
         raise NotImplementedError("Dataset not implemented")
 
-
     val_loader = DataLoader(
         val_dataset, shuffle=True, batch_size=1, num_workers=1, pin_memory=True
     )
@@ -279,7 +281,6 @@ def main():
     else:
         raise NotImplemented("Model not implemented")
 
-    # image_encoder.eval()
     for param in image_encoder.parameters():
         param.requires_grad_(False)
     image_encoder.eval()

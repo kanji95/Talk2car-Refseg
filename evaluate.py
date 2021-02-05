@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from models.position_encoding import *
 
 from utils.utils import print_, log_predicitons
-from utils.metrics import compute_mask_IOU, compute_batch_IOU, compute_point_game
+from utils.metrics import *
 
 
 @torch.no_grad()
@@ -27,7 +27,6 @@ def evaluate(
 
     total_loss = 0
     total_accuracy = 0
-    iou_accuracy = 0
 
     total_inter, total_union = 0, 0
     mean_IOU = 0
@@ -55,30 +54,19 @@ def evaluate(
         start_time = time()
         with torch.no_grad():
             img = image_encoder(img)
-           
+
         mask = joint_model(img, phrase, img_mask, phrase_mask)
         end_time = time()
         elapsed_time = end_time - start_time
 
         loss = loss_func(mask, gt_mask)
 
-        ## mask_mean = mask.mean().item()
-        threshold = args.threshold ## min(mask_mean, args.threshold)
-        inter, union = compute_batch_IOU(mask, gt_mask, threshold)
-
+        inter, union = compute_batch_IOU(mask, gt_mask, mask_thresh=args.mask_thresh)
+        
         total_inter += inter.sum().item()
         total_union += union.sum().item()
 
-        ## import pdb; pdb.set_trace();
-
-        ## iou_accuracy = total_inter/total_union
-        ## iou_score = inter / union
-        ## iou_accuracy += (iou_score > 0.5).sum()/batch_size
-
-        ## accuracy = (inter > 0.4*union).sum().item()/batch_size
-
-        ## total_accuracy += accuracy
-        total_accuracy += compute_point_game(mask, gt_mask, topk=args.topk)
+        total_accuracy += pointing_game(mask, gt_mask, topk=args.topk)
 
         total_loss += float(loss.item())
 
@@ -87,10 +75,16 @@ def evaluate(
             orig_phrase = batch["orig_phrase"]
             image_ids = batch["index"]
 
-            ## if epochId % 5 == 0:
-            ##     print(f'IOU Score:: {iou_score.view(1, -1)}, Mask_min:: {mask.min().item()}, Mask_max:: {mask.max().item()}')
-
-            log_predicitons(orig_image, orig_phrase, mask.cpu(), gt_mask.cpu(), image_ids, title="val", k=4, threshold=args.threshold)
+            log_predicitons(
+                orig_image,
+                orig_phrase,
+                mask.cpu(),
+                gt_mask.cpu(),
+                image_ids,
+                title="val",
+                k=4,
+                threshold=args.threshold,
+            )
 
         if step % 50 == 0:
             gc.collect()
@@ -99,24 +93,19 @@ def evaluate(
             timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
 
             curr_loss = total_loss / (step + 1)
-            ## import pdb; pdb.set_trace();
-            ## overall_IOU = total_inter / total_union
-            ## curr_IOU = iou_accuracy / (step + 1)
-            curr_IOU = 0
+            curr_IOU = total_inter / total_union
             curr_acc = total_accuracy / (step + 1)
 
             print_(
-                    f"{timestamp} Validation: iter [{step:3d}/{data_len}] loss {curr_loss:.4f} IOU_accuracy {curr_IOU:.4f} accuracy {curr_acc:.4f} memory_use {memoryUse:.3f}MB elapsed {elapsed_time:.2f}"
+                f"{timestamp} Validation: iter [{step:3d}/{data_len}] loss {curr_loss:.4f} IOU {curr_IOU:.4f} Accuracy {curr_acc:.4f} memory_use {memoryUse:.3f}MB elapsed {elapsed_time:.2f}"
             )
 
     val_loss = total_loss / data_len
-    val_IOU_acc = 0 ## iou_accuracy / data_len
+    val_IOU = total_inter / total_union
     val_acc = total_accuracy / data_len
-
-    # val_acc = mean_IOU/data_len
 
     timestamp = datetime.now().strftime("%Y|%m|%d-%H:%M")
     print_(
-            f"{timestamp} Validation: EpochId: {epochId:2d} loss {val_loss:.4f} IOU_Accuracy {val_IOU_acc:.4f} accuracy {val_acc:.4f}"
+        f"{timestamp} Validation: EpochId: {epochId:2d} loss {val_loss:.4f} IOU {val_IOU_acc:.4f} Accuracy {val_acc:.4f}"
     )
-    return val_loss, val_IOU_acc, val_acc
+    return val_loss, val_IOU, val_acc
