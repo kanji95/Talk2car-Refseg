@@ -24,7 +24,6 @@ from models.modeling.deeplab import *
 from dataloader.referit_loader import *
 from dataloader.talk2car import Talk2Car
 
-from losses import Loss
 from models.model import JointModel
 from utils import im_processing
 from utils.utils import log_gpu_usage, print_
@@ -41,8 +40,6 @@ def get_args_parser():
 
     parser.add_argument("--use_dcrf", default=False, action="store_true")
 
-    parser.add_argument("--threshold", default=0.5, type=float)
-
     # MODEL Params
     parser.add_argument("--image_encoder", type=str, default="deeplabv3_plus")
     parser.add_argument("--num_layers", type=int, default=1)
@@ -52,7 +49,7 @@ def get_args_parser():
     parser.add_argument("--model_path", type=str)
 
     # LOSS Params
-    parser.add_argument("--loss", default="bce", type=str)
+    parser.add_argument("--metric", default="pointing_game", type=str, choices=["pointing_game", "intersection_at_t", "recall_at_k", "dice_score"])
 
     # DATASET parameters
     parser.add_argument(
@@ -153,12 +150,20 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
             dcrf_output_mask = torch.from_numpy(pred_raw_dcrf).unsqueeze(0)
 
-        inter, union = compute_batch_IOU(output_mask, gt_mask, args.threshold)
+        inter, union = compute_batch_IOU(output_mask, gt_mask, args.mask_thresh)
 
         total_inter += inter.sum().item()
         total_union += union.sum().item()
 
-        total_accuracy += pointing_game(mask, gt_mask, topk=args.topk)
+        if args.metric == "pointing_game":
+            total_accuracy += pointing_game(output_mask, gt_mask)
+        elif args.metric == "intersection_at_t":
+            total_accuracy += intersection_at_t(output_mask, gt_mask, args.mask_thresh, args.area_thresh)
+        elif args.metric == "recall_at_k":
+            total_accuracy += recall_at_k(output_mask, target, args.topk)
+        elif args.metric == "dice_score":
+            total_accuracy += dice_score(output_mask, gt_mask, args.mask_thresh)
+
 
         score = 0 if union.item() == 0 else inter.item() / union.item()
 
@@ -173,7 +178,7 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         total_dcrf_score = 0
         if args.use_dcrf:
             dcrf_inter, dcrf_union = compute_mask_IOU(
-                dcrf_output_mask, gt_mask, args.threshold
+                dcrf_output_mask, gt_mask, args.mask_thresh
             )
 
             total_dcrf_inter += dcrf_inter.item()

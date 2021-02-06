@@ -103,7 +103,7 @@ class JointModel(nn.Module):
 
         ### with Baseline in_channels = 512 * 3
         self.aspp_decoder = ASPP(
-            in_channels=out_channels*3, atrous_rates=[6, 12, 24], out_channels=512
+            in_channels=out_channels, atrous_rates=[6, 12, 24], out_channels=512
         )
 
         self.conv_upsample = ConvUpsample(

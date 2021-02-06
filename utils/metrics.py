@@ -30,7 +30,7 @@ def intersection_at_t(masks, target, mask_thresh=0.3, area_thresh=0.5):
     return accuracy
 
 @torch.no_grad()
-def pointing_game(masks, target, topk=1):
+def pointing_game(masks, target):
     assert target.shape[-2:] == masks.shape[-2:]
     batch_size = masks.shape[0]
     max_indices = masks.flatten(1).argmax(dim=-1)[:, None]
@@ -47,3 +47,14 @@ def recall_at_k(masks, target, topk=1):
     target_values = target.flatten(1).gather(1, indices).sum(dim=-1)
     accuracy = (target_values > 0).float().mean().item()
     return accuracy
+
+@torch.no_grad()
+def dice_score(masks, target, mask_thresh=0.3):
+    assert target.shape[-2:] == masks.shape[-2:]
+    temp = (masks > mask_thresh) * target
+    intersection = torch.sum(temp.flatten(1), dim=-1, keepdim=True)
+    union = torch.sum(
+        (((masks > mask_thresh) + target) - temp).flatten(1), dim=-1, keepdim=True
+    )
+    score = 2*intersection.sum()/union.sum() 
+    return score.item()
