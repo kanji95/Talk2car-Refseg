@@ -61,7 +61,15 @@ class Talk2Car(data.Dataset):
         ) as f:
             data = json.load(f)[self.split]
             self.data = {int(k): v for k, v in data.items()}  # Map to int
-        self.img_dir = os.path.join(self.root, "imgs")
+        ## self.img_dir = os.path.join(self.root, "imgs")
+        self.img_dir = os.path.join(self.root, "images_obj")
+        self.img_data_files = os.path.join(self.root, "unambiguous_annotations", self.split)
+        self.img_files = os.listdir(self.img_data_files)
+
+        ## self.updated_sen = []
+        ## with open('/home/kanishk/vigil/autonomous_grounding/dataloader/updated_annotation_sentences.txt', 'r') as f:
+        ##     for line in f.readlines():
+        ##         self.updated_sen.append(line.strip())
 
         ## self.mask_dir = os.path.join(self.root, "refined_annotations") 
         ## self.mask_dir = os.path.join(self.root, "image_annotations_manual")
@@ -98,14 +106,18 @@ class Talk2Car(data.Dataset):
             self.data[k]["centernet"] = rpns[k]
 
     def __len__(self):
+        ## return len(self.img_files)
         return len(self.data.keys())
 
     def __getitem__(self, idx):
+        # img_file = self.img_files[item]
+        # idx = int(img_file.split(".jpg")[0].split("_")[-1])
         output = {"index": torch.LongTensor([idx])}
         sample = self.data[idx]
 
         # Load image
         img_path = os.path.join(self.img_dir, sample["img"])
+        # img_path = os.path.join(self.img_dir, f"img_ann_{self.split}_{idx}.jpg")
 
         with open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
@@ -119,12 +131,14 @@ class Talk2Car(data.Dataset):
         ## command = self.vocabulary.sent2ix_andpad(sample['command'], add_eos_token=True)
         ## output['command'] = torch.LongTensor(command)
         ## output['command_length'] = len(self.vocabulary.sent2ix(sample['command'])) + 1
+
+        ## sample["command"] = self.updated_sen[idx]
+        ## print(sample["command"])
         phrase, phrase_mask = self.vocabulary.tokenize(sample["command"])
 
         output["orig_phrase"] = sample["command"]
         output["phrase"] = phrase
         output["phrase_mask"] = phrase_mask
-
 
         ## mask_path = os.path.join(self.mask_dir, f"refined_{idx}.png")
         ## mask_path = os.path.join(self.mask_dir, f"gt_img_mnl_ann_train_{idx}.png")

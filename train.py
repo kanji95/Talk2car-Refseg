@@ -81,7 +81,7 @@ def train(
         total_inter += inter.sum().item()
         total_union += union.sum().item()
 
-        total_accuracy += pointing_game(mask, gt_mask, topk=args.topk)
+        total_accuracy += pointing_game(mask, gt_mask)
 
         total_loss += float(loss.item())
 

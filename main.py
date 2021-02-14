@@ -432,11 +432,11 @@ def main(args):
                 model_filename,
             )
             epochs_without_improvement = 0
-        elif val_acc < best_acc and epochId != args.epochs - 1:
+        elif val_acc <= best_acc:
             epochs_without_improvement += 1
             print_(f"Epochs without Improvement: {epochs_without_improvement}")
 
-            if epochs_without_improvement == 8:
+            if epochs_without_improvement == 8 and epochId != args.epochs - 1:
                 print_(
                     f"{epochs_without_improvement} epochs without improvement, Stopping Training!"
                 )

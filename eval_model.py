@@ -98,6 +98,11 @@ def evaluate(image_encoder, joint_model, val_loader, args):
     prec_at_x = {0.5: 0, 0.6: 0, 0.7: 0, 0.8: 0, 0.9: 0}
     prec_dcrf_at_x = {0.5: 0, 0.6: 0, 0.7: 0, 0.8: 0, 0.9: 0}
 
+    ## updated_sen = []
+    ## with open('/home/kanishk/vigil/autonomous_grounding/dataloader/updated_annotation_sentences.txt', 'r') as f:
+    ##     for line in f.readlines():
+    ##         updated_sen.append(line.strip())
+
     data_len = len(val_loader)
     for step, batch in enumerate(val_loader):
 
@@ -106,6 +111,12 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         phrase = batch["phrase"].cuda(non_blocking=True)
         phrase_mask = batch["phrase_mask"].cuda(non_blocking=True)
         index = batch["index"]
+
+        ## if index.item() < 101:
+        ##     batch["orig_phrase"] = updated_sen[index.item()]
+        ##     phrase, phrase_mask = val_loader.dataset.vocabulary.tokenize(batch["orig_phrase"])
+        ##     phrase = phrase.unsqueeze(0).cuda(non_blocking=True)
+        ##     phrase_mask = phrase_mask.unsqueeze(0).cuda(non_blocking=True)
 
         gt_mask = batch["seg_mask"]
         gt_mask = gt_mask.squeeze(dim=1)
