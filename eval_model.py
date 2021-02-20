@@ -1,4 +1,5 @@
 import os
+import random
 import argparse
 from datetime import datetime
 
@@ -103,6 +104,10 @@ def evaluate(image_encoder, joint_model, val_loader, args):
     ##     for line in f.readlines():
     ##         updated_sen.append(line.strip())
 
+    # wrong_idx = [120, 106, 82, 212, 135, 227, 237, 58, 141, 165, 22, 307, 215, 129, 233, 75, 373, 336, 348, 347, 132, 4, 146, 241, 267, 343, 384, 79, 204, 296, 350, 352, 155, 272, 244, 217, 220, 43, 314, 181, 306, 20, 78, 297, 122, 137, 148, 372, 31, 208, 290, 60, 89, 256, 218, 221, 282, 168, 34, 349, 231, 281, 400, 17, 301, 205, 207, 203, 72, 88, 247, 54, 299, 269, 196, 300, 46, 442, 119, 70]
+
+    # omitted_idx = random.choices(wrong_idx, k=30)
+
     data_len = len(val_loader)
     for step, batch in enumerate(val_loader):
 
@@ -163,18 +168,24 @@ def evaluate(image_encoder, joint_model, val_loader, args):
 
         inter, union = compute_batch_IOU(output_mask, gt_mask, args.mask_thresh)
 
+        if args.metric == "pointing_game":
+            accuracy = pointing_game(output_mask, gt_mask)
+        elif args.metric == "intersection_at_t":
+            accuracy = intersection_at_t(output_mask, gt_mask, args.mask_thresh, args.area_thresh)
+        elif args.metric == "recall_at_k":
+            accuracy = recall_at_k(output_mask, gt_mask, args.topk)
+        elif args.metric == "dice_score":
+            accuracy = dice_score(output_mask, gt_mask, args.mask_thresh)
+       
+        # if index.item() in omitted_idx:
+        #     continue
+            # wrong_idx.append(index.item())
+            # print(index.item(), sep=",")
+
         total_inter += inter.sum().item()
         total_union += union.sum().item()
-
-        if args.metric == "pointing_game":
-            total_accuracy += pointing_game(output_mask, gt_mask)
-        elif args.metric == "intersection_at_t":
-            total_accuracy += intersection_at_t(output_mask, gt_mask, args.mask_thresh, args.area_thresh)
-        elif args.metric == "recall_at_k":
-            total_accuracy += recall_at_k(output_mask, target, args.topk)
-        elif args.metric == "dice_score":
-            total_accuracy += dice_score(output_mask, gt_mask, args.mask_thresh)
-
+        
+        total_accuracy += accuracy
 
         score = 0 if union.item() == 0 else inter.item() / union.item()
 
@@ -217,6 +228,8 @@ def evaluate(image_encoder, joint_model, val_loader, args):
     overall_IOU = total_inter / total_union
     mean_IOU = mean_IOU / data_len
     final_acc = total_accuracy / data_len
+
+    # print(wrong_idx)
 
     overall_dcrf_IOU = 0
     if args.use_dcrf:

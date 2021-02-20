@@ -55,107 +55,79 @@ class Talk2Car(data.Dataset):
         self.root = root
         self.split = split
 
+        # import pdb; pdb.set_trace();
+        self.annotations = []
+        for split_ in ["train", "val"]:
+            with open(f"/home/kanishk/vigil/autonomous_grounding/dataloader/annotation_{split_}.txt", "r") as f:
+                for line in f.readlines():
+                    image_id, sentence = int(line.split()[0]), line.split()[1:]
+                    sentence = " ".join(sentence)
+                    self.annotations.append([image_id, sentence, split_])
+
+        ## self.data = {}
         with open(
             "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_w_rpn_no_duplicates.json",
             "rb",
         ) as f:
             data = json.load(f)[self.split]
             self.data = {int(k): v for k, v in data.items()}  # Map to int
-        ## self.img_dir = os.path.join(self.root, "imgs")
-        self.img_dir = os.path.join(self.root, "images_obj")
-        self.img_data_files = os.path.join(self.root, "unambiguous_annotations", self.split)
-        self.img_files = os.listdir(self.img_data_files)
+            ## self.data["val"] = {int(k): v for k, v in data["val"].items()}  # Map to int
+            ## self.data["train"] = {int(k): v for k, v in data["train"].items()}
 
-        ## self.updated_sen = []
-        ## with open('/home/kanishk/vigil/autonomous_grounding/dataloader/updated_annotation_sentences.txt', 'r') as f:
-        ##     for line in f.readlines():
-        ##         self.updated_sen.append(line.strip())
-
-        ## self.mask_dir = os.path.join(self.root, "refined_annotations") 
-        ## self.mask_dir = os.path.join(self.root, "image_annotations_manual")
-        self.mask_dir = os.path.join(self.root, "mask_image_bin")
+        self.img_dir = os.path.join(self.root, "imgs")
+        self.mask_dir = os.path.join(self.root, "val_masks_new")
 
         self.transform = transform
         self.mask_transform = mask_transform
 
         self.vocabulary = Vocabulary(vocabulary, glove_path, max_len)
 
-        if self.split in ["val", "train"]:
-            self.add_train_annos = (
-                True  # Add extra info when reading out items for training
-            )
-        else:
-            self.add_train_annos = False
+        ## if self.split in ["val", "train"]:
+        ##     self.add_train_annos = (
+        ##         True  # Add extra info when reading out items for training
+        ##     )
+        ## else:
+        ##     self.add_train_annos = False
 
-        self.ignore_index = 255  # Ignore index when all RPNs < 0.5 IoU
-        self.num_rpns_per_image = 16  # We only use 16 RPN per image
-
-        # Filter out rpns we are not going to use
-        # RPNS were obtained from center after soft NMS
-        # We order the scores, and take the top k.
-        assert self.num_rpns_per_image < 64
-        rpns = {k: sample["centernet"] for k, sample in self.data.items()}
-        rpns_score_ordered_idx = {
-            k: np.argsort([rpn["score"] for rpn in v]) for k, v in rpns.items()
-        }
-        rpns = {
-            k: [v[idx] for idx in rpns_score_ordered_idx[k][-self.num_rpns_per_image :]]
-            for k, v in rpns.items()
-        }
-        for k in self.data.keys():
-            self.data[k]["centernet"] = rpns[k]
+        ## self.ignore_index = 255  # Ignore index when all RPNs < 0.5 IoU
+        ## self.num_rpns_per_image = 16  # We only use 16 RPN per image
 
     def __len__(self):
-        ## return len(self.img_files)
+        ## return len(self.annotations)
         return len(self.data.keys())
 
     def __getitem__(self, idx):
-        # img_file = self.img_files[item]
-        # idx = int(img_file.split(".jpg")[0].split("_")[-1])
+        ## idx = self.annotations[item][0]
+        ## split = self.annotations[item][2]
         output = {"index": torch.LongTensor([idx])}
+        ## sample = self.data[split][idx]
         sample = self.data[idx]
 
         # Load image
         img_path = os.path.join(self.img_dir, sample["img"])
-        # img_path = os.path.join(self.img_dir, f"img_ann_{self.split}_{idx}.jpg")
 
         with open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
-        output["orig_image"] = np.array(img.resize((448, 448)))
+        ## output["orig_image"] = np.array(img.resize((448, 448)))
 
         if self.transform is not None:
             img = self.transform(img)
         output["image"] = img
 
-        # Load command
-        ## command = self.vocabulary.sent2ix_andpad(sample['command'], add_eos_token=True)
-        ## output['command'] = torch.LongTensor(command)
-        ## output['command_length'] = len(self.vocabulary.sent2ix(sample['command'])) + 1
-
-        ## sample["command"] = self.updated_sen[idx]
-        ## print(sample["command"])
+        ## sample["command"] = self.annotations[item][1]
         phrase, phrase_mask = self.vocabulary.tokenize(sample["command"])
 
         output["orig_phrase"] = sample["command"]
         output["phrase"] = phrase
         output["phrase_mask"] = phrase_mask
 
-        ## mask_path = os.path.join(self.mask_dir, f"refined_{idx}.png")
-        ## mask_path = os.path.join(self.mask_dir, f"gt_img_mnl_ann_train_{idx}.png")
         mask_path = os.path.join(self.mask_dir, f"gt_img_ann_{self.split}_{idx}.png")
 
         gt = sample["referred_object"]
         x0, y0, x1, y1 = gt[0], gt[1], gt[0] + gt[2], gt[1] + gt[3]
         
-        if os.path.exists(mask_path):
-            mask_img = Image.open(mask_path).convert("L")
-            mask_img = torch.from_numpy(np.array(mask_img))
-        else:
-            mask_img = torch.zeros((900, 1600))
-            mask_img[y0:y1, x0:x1] = 1
-        
-        if mask_img.sum() == 0:
-            mask_img[y0:y1, x0:x1] = 1
+        mask_img = Image.open(mask_path).convert("L")
+        mask_img = torch.from_numpy(np.array(mask_img))
         
         mask_img = mask_img.float() 
         mask_img = self.mask_transform(mask_img)

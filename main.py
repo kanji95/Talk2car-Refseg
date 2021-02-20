@@ -115,7 +115,10 @@ def get_args_parser():
     parser.add_argument("--model_dir", type=str, default="./saved_model")
     parser.add_argument("--save", default=False, action="store_true")
 
-    parser.add_argument("--model_filename", default="model_talk2car.pth", type=str)
+    parser.add_argument("--best_acc", default=0.0, type=float)
+    parser.add_argument("--finetune", default=False, action="store_true")
+    parser.add_argument("--model_filename", default="model_talk2car.pth", type=str) 
+    parser.add_argument("--checkpoint", default="", type=str)
 
     # LOSS Params
     parser.add_argument("--loss", default="bce", type=str)
@@ -237,9 +240,7 @@ def main(args):
 
     if n_gpu > 1:
         image_encoder = nn.DataParallel(image_encoder)
-
-    joint_model.to(device)
-    image_encoder.to(device)
+        joint_model = nn.DataParallel(joint_model)
 
     total_parameters = 0
     for name, child in joint_model.named_children():
@@ -268,6 +269,17 @@ def main(args):
         optimizer = torch.optim.SGD(
             param_dicts, lr=args.lr, weight_decay=args.weight_decay
         )
+        
+    # import pdb; pdb.set_trace();
+    if args.finetune:
+        # checkpoint = torch.load(args.checkpoint, map_location=lambda storage, location: storage)
+        checkpoint = torch.load(args.checkpoint, map_location={'cuda:0': 'cpu'})
+        joint_model.load_state_dict(checkpoint["state_dict"])
+        # optimizer.load_state_dict(checkpoint["optimizer"])
+
+    joint_model.to(device)
+    image_encoder.to(device)
+    # optimizer.to(device)
 
     # Loss Calculator
     loss_func = Loss(args)
@@ -388,7 +400,7 @@ def main(args):
         f"===================== SAVING MODEL TO FILE {model_filename}! ====================="
     )
 
-    best_acc = 0
+    best_acc = args.best_acc
     epochs_without_improvement = 0
 
     for epochId in range(args.epochs):
@@ -418,19 +430,20 @@ def main(args):
 
         lr_scheduler.step(val_loss)
 
-        if val_acc > best_acc and args.save:
+        if val_acc > best_acc:
             best_acc = val_acc
             print_(
                 f"Saving Checkpoint at epoch {epochId}, best validation accuracy is {best_acc}!"
             )
-            torch.save(
-                {
-                    "epoch": epochId,
-                    "state_dict": joint_model.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                },
-                model_filename,
-            )
+            if args.save:
+                torch.save(
+                    {
+                        "epoch": epochId,
+                        "state_dict": joint_model.state_dict(),
+                        "optimizer": optimizer.state_dict(),
+                    },
+                    model_filename,
+                )
             epochs_without_improvement = 0
         elif val_acc <= best_acc:
             epochs_without_improvement += 1
@@ -445,7 +458,7 @@ def main(args):
         print_(f"Current Run Name {args.run_name}")
         best_acc_filename = os.path.join(
             save_path,
-            f"{args.image_encoder}_{args.dataset}_{args.num_encoder_layers}_{args.loss}_{best_acc:.5f}.pth",
+            f"{args.image_encoder}_{args.finetune}_{args.dataset}_{args.num_encoder_layers}_{args.loss}_{best_acc:.5f}.pth",
         )
         os.rename(model_filename, best_acc_filename)
 

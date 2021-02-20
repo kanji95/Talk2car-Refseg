@@ -70,21 +70,21 @@ def evaluate(
 
         total_loss += float(loss.item())
 
-        if step % 5 == 0:
-            orig_image = batch["orig_image"].numpy()
-            orig_phrase = batch["orig_phrase"]
-            image_ids = batch["index"]
+        ## if step % 5 == 0:
+        ##     orig_image = batch["orig_image"].numpy()
+        ##     orig_phrase = batch["orig_phrase"]
+        ##     image_ids = batch["index"]
 
-            log_predicitons(
-                orig_image,
-                orig_phrase,
-                mask.cpu(),
-                gt_mask.cpu(),
-                image_ids,
-                title="val",
-                k=4,
-                threshold=args.mask_thresh,
-            )
+        ##     log_predicitons(
+        ##         orig_image,
+        ##         orig_phrase,
+        ##         mask.cpu(),
+        ##         gt_mask.cpu(),
+        ##         image_ids,
+        ##         title="val",
+        ##         k=4,
+        ##         threshold=args.mask_thresh,
+        ##     )
 
         if step % 50 == 0:
             gc.collect()
