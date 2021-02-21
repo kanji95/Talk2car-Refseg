@@ -38,7 +38,11 @@ def train(
 
     epoch_start = time()
 
-    data_len = len(train_loader)
+    n_iter = 0
+    data_len = train_loader.dataset.__len__()
+	if epochId == 0:
+        print(f'Train data length: {data_len}')
+
     for step, batch in enumerate(train_loader):
         iterId = step + (epochId * data_len) - 1
 
@@ -83,6 +87,8 @@ def train(
 
         total_accuracy += pointing_game(mask, gt_mask)
 
+        n_iter += batch_size
+ 
         total_loss += float(loss.item())
 
         if iterId % 50 == 0 and step != 0:
@@ -94,7 +100,7 @@ def train(
 
             curr_loss = total_loss / (step + 1)
             curr_IOU = total_inter / total_union
-            curr_acc = total_accuracy / (step + 1)
+            curr_acc = total_accuracy / n_iter
 
             lr = optimizer.param_groups[0]["lr"]
 

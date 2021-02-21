@@ -375,7 +375,7 @@ def main(args):
     val_loader = DataLoader(
         val_dataset,
         shuffle=False,
-        batch_size=args.batch_size,
+        batch_size=1,
         num_workers=args.num_workers,
         pin_memory=True,
     )
@@ -458,7 +458,7 @@ def main(args):
         print_(f"Current Run Name {args.run_name}")
         best_acc_filename = os.path.join(
             save_path,
-            f"{args.image_encoder}_{args.finetune}_{args.dataset}_{args.num_encoder_layers}_{args.loss}_{best_acc:.5f}.pth",
+            f"{args.run_name}_bs_{args.batch_size}_el_{args.num_encoder_layers}_sl_{args.seq_len}_{args.loss}_{best_acc:.5f}.pth",
         )
         os.rename(model_filename, best_acc_filename)
 

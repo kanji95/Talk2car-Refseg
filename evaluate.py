@@ -34,8 +34,12 @@ def evaluate(
     n_iter = 0
 
     feature_dim = 14
-    data_len = len(val_loader)
+    data_len = val_loader.dataset.__len__()
 
+	if epochId == 0:
+	    print(f'Validation data length: {data_len}')
+
+    n_iter = 0
     epoch_start = time()
     for step, batch in enumerate(val_loader):
 
@@ -68,6 +72,8 @@ def evaluate(
 
         total_accuracy += pointing_game(mask, gt_mask)
 
+		n_iter += batch_size
+
         total_loss += float(loss.item())
 
         ## if step % 5 == 0:
@@ -86,7 +92,7 @@ def evaluate(
         ##         threshold=args.mask_thresh,
         ##     )
 
-        if step % 50 == 0:
+        if step % 500 == 0:
             gc.collect()
             memoryUse = py.memory_info()[0] / 2.0 ** 20
 
@@ -94,7 +100,7 @@ def evaluate(
 
             curr_loss = total_loss / (step + 1)
             curr_IOU = total_inter / total_union
-            curr_acc = total_accuracy / (step + 1)
+            curr_acc = total_accuracy / n_iter
 
             print_(
                 f"{timestamp} Validation: iter [{step:3d}/{data_len}] loss {curr_loss:.4f} IOU {curr_IOU:.4f} Accuracy {curr_acc:.4f} memory_use {memoryUse:.3f}MB elapsed {elapsed_time:.2f}"

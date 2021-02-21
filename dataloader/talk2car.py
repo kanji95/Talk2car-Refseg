@@ -64,7 +64,7 @@ class Talk2Car(data.Dataset):
                     sentence = " ".join(sentence)
                     self.annotations.append([image_id, sentence, split_])
 
-        ## self.data = {}
+        self.data = {}
         with open(
             "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_w_rpn_no_duplicates.json",
             "rb",
@@ -81,16 +81,6 @@ class Talk2Car(data.Dataset):
         self.mask_transform = mask_transform
 
         self.vocabulary = Vocabulary(vocabulary, glove_path, max_len)
-
-        ## if self.split in ["val", "train"]:
-        ##     self.add_train_annos = (
-        ##         True  # Add extra info when reading out items for training
-        ##     )
-        ## else:
-        ##     self.add_train_annos = False
-
-        ## self.ignore_index = 255  # Ignore index when all RPNs < 0.5 IoU
-        ## self.num_rpns_per_image = 16  # We only use 16 RPN per image
 
     def __len__(self):
         ## return len(self.annotations)
@@ -123,8 +113,8 @@ class Talk2Car(data.Dataset):
 
         mask_path = os.path.join(self.mask_dir, f"gt_img_ann_{self.split}_{idx}.png")
 
-        gt = sample["referred_object"]
-        x0, y0, x1, y1 = gt[0], gt[1], gt[0] + gt[2], gt[1] + gt[3]
+        ## gt = sample["referred_object"]
+        ## x0, y0, x1, y1 = gt[0], gt[1], gt[0] + gt[2], gt[1] + gt[3]
         
         mask_img = Image.open(mask_path).convert("L")
         mask_img = torch.from_numpy(np.array(mask_img))
@@ -150,52 +140,52 @@ class Talk2Car(data.Dataset):
         return " ".join(self.vocabulary.ix2sent_drop_pad(command.numpy().tolist()))
 
 
-def main():
-    """ A simple example """
-    root = "/ssd_scratch/cvit/kanishk/imgs/"
-    split = "train"
-    dataset = Talk2Car(root, split, "./utils/vocabulary.txt", transforms.ToTensor())
-
-    print("=> Load a sample")
-    index = np.random.choice(range(8348))
-    sample = dataset.__getitem__(index)
-    img = np.transpose(sample["image"].numpy(), (1, 2, 0))
-    command = dataset.convert_command_to_text(sample["command"])
-    print("Command in human readable text for image {%s}: %s" % (index, command))
-
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-
-    print("=> Plot image with bounding box around referred object")
-    fig, ax = plt.subplots(1)
-    ax.imshow(img)
-    xl, yb, xr, yt = sample["gt_bbox_lbrt"].tolist()
-    w, h = xr - xl, yt - yb
-    rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="r")
-    ax.add_patch(rect)
-    plt.axis("off")
-    plt.show()
-
-    print("=> Plot image with region proposals (red), gt bbox (blue)")
-    fig, ax = plt.subplots(1)
-    ax.imshow(img)
-    for i in range(sample["rpn_bbox_lbrt"].size(0)):
-        bbox = sample["rpn_bbox_lbrt"][i].tolist()
-        xl, yb, xr, yt = bbox
-        w, h = xr - xl, yt - yb
-        rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="r")
-        ax.add_patch(rect)
-
-    gt_box = (sample["rpn_bbox_lbrt"][sample["rpn_gt"].item()]).tolist()
-    xl, yb, xr, yt = gt_box
-    w, h = xr - xl, yt - yb
-    rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="b")
-    ax.add_patch(rect)
-    plt.axis("off")
-    plt.tight_layout()
-    plt.show()
-    plt.savefig("bboxes.png", bbox_inches="tight")
-
-
-if __name__ == "__main__":
-    main()
+## def main():
+##     """ A simple example """
+##     root = "/ssd_scratch/cvit/kanishk/imgs/"
+##     split = "train"
+##     dataset = Talk2Car(root, split, "./utils/vocabulary.txt", transforms.ToTensor())
+## 
+##     print("=> Load a sample")
+##     index = np.random.choice(range(8348))
+##     sample = dataset.__getitem__(index)
+##     img = np.transpose(sample["image"].numpy(), (1, 2, 0))
+##     command = dataset.convert_command_to_text(sample["command"])
+##     print("Command in human readable text for image {%s}: %s" % (index, command))
+## 
+##     import matplotlib.pyplot as plt
+##     import matplotlib.patches as patches
+## 
+##     print("=> Plot image with bounding box around referred object")
+##     fig, ax = plt.subplots(1)
+##     ax.imshow(img)
+##     xl, yb, xr, yt = sample["gt_bbox_lbrt"].tolist()
+##     w, h = xr - xl, yt - yb
+##     rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="r")
+##     ax.add_patch(rect)
+##     plt.axis("off")
+##     plt.show()
+## 
+##     print("=> Plot image with region proposals (red), gt bbox (blue)")
+##     fig, ax = plt.subplots(1)
+##     ax.imshow(img)
+##     for i in range(sample["rpn_bbox_lbrt"].size(0)):
+##         bbox = sample["rpn_bbox_lbrt"][i].tolist()
+##         xl, yb, xr, yt = bbox
+##         w, h = xr - xl, yt - yb
+##         rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="r")
+##         ax.add_patch(rect)
+## 
+##     gt_box = (sample["rpn_bbox_lbrt"][sample["rpn_gt"].item()]).tolist()
+##     xl, yb, xr, yt = gt_box
+##     w, h = xr - xl, yt - yb
+##     rect = patches.Rectangle((xl, yb), w, h, fill=False, edgecolor="b")
+##     ax.add_patch(rect)
+##     plt.axis("off")
+##     plt.tight_layout()
+##     plt.show()
+##     plt.savefig("bboxes.png", bbox_inches="tight")
+## 
+## 
+## if __name__ == "__main__":
+##     main()

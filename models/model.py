@@ -78,18 +78,18 @@ class JointModel(nn.Module):
         ######################################
 
         ########################## W/O CMMLF #############################
-        ## self.conv_fuse = nn.Sequential(nn.Conv2d(out_channels * 2, out_channels, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(out_channels))
+        self.conv_fuse = nn.Sequential(nn.Conv2d(out_channels * 2, out_channels, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(out_channels))
         ################################################################
 
         ############################### Conv3D #########################
-        ## self.conv_3d = nn.Sequential(nn.Conv3d(out_channels, out_channels, 3, padding=(0, 1, 1)), nn.BatchNorm3d(out_channels))
+        self.conv_3d = nn.Sequential(nn.Conv3d(out_channels, out_channels, 3, padding=(0, 1, 1)), nn.BatchNorm3d(out_channels))
         ################################################################
 
         ############### CMMLF ######################
-        self.cmmlf = CMMLF(out_channels, 196, dropout)
+        ## self.cmmlf = CMMLF(out_channels, 196, dropout)
         ############################################
 
-        ################ CONV LSTM ##############
+        ## ############# CONV LSTM ##############
         ## self.conv_lstm = ConvLSTM(
         ##     input_dim=512,
         ##     hidden_dim=[512],
@@ -99,15 +99,15 @@ class JointModel(nn.Module):
         ##     bias=True,
         ##     return_all_layers=False,
         ## )
-        #########################################
+        ## ######################################
 
         ### with Baseline in_channels = 512 * 3
         self.aspp_decoder = ASPP(
-            in_channels=out_channels, atrous_rates=[6, 12, 24], out_channels=512
+            in_channels=out_channels, atrous_rates=[6, 12, 24], out_channels=1024
         )
 
         self.conv_upsample = ConvUpsample(
-            in_channels=512,
+            in_channels=1024,
             out_channels=1,
             channels=[256, 256],
             upsample=[True, True],
@@ -118,9 +118,7 @@ class JointModel(nn.Module):
             nn.Upsample(
                 size=(self.mask_dim, self.mask_dim), mode="bilinear", align_corners=True
             ),
-            ## nn.Hardsigmoid(),
             nn.Sigmoid(),
-	    ## nn.Tanh(),
         )
 
         self.dropout = nn.Dropout(dropout)
@@ -179,25 +177,25 @@ class JointModel(nn.Module):
             ## enc_out = src.permute(1, 2, 0)
             ##############################
 
-            ####################### W/O CMMLF #####################
-            ## f_img_out = enc_out[:, :, : H * W].view(B, C, H, W)
+            #################### W/O CMMLF #####################
+            f_img_out = enc_out[:, :, : H * W].view(B, C, H, W)
 
-            ## f_txt_out = enc_out[:, :, H * W :].transpose(1, 2)  # B, L, E
-            ## masked_sum = f_txt_out * phrase_mask[:, :, None]
-            ## f_txt_out = masked_sum.sum(dim=1) / phrase_mask.sum(dim=-1, keepdim=True)
+            f_txt_out = enc_out[:, :, H * W :].transpose(1, 2)  # B, L, E
+            masked_sum = f_txt_out * phrase_mask[:, :, None]
+            f_txt_out = masked_sum.sum(dim=1) / phrase_mask.sum(dim=-1, keepdim=True)
 
-            ## f_out = torch.cat(
-            ##     [f_img_out, f_txt_out[:, :, None, None].expand(B, -1, H, W)], dim=1
-            ## )
-            ## 
-            ## enc_out = self.activation(self.conv_fuse(f_out))
-            #######################################################
+            f_out = torch.cat(
+                [f_img_out, f_txt_out[:, :, None, None].expand(B, -1, H, W)], dim=1
+            )
+            
+            enc_out = self.activation(self.conv_fuse(f_out))
+            ####################################################
 
             joint_features.append(enc_out)
 
         ###################### CMMLF ########################
-        level_features = torch.stack(joint_features, dim=1)
-        fused_feature = self.activation(self.cmmlf(level_features, H, W, phrase_mask))
+        ## level_features = torch.stack(joint_features, dim=1)
+        ## fused_feature = self.activation(self.cmmlf(level_features, H, W, phrase_mask))
         #####################################################
 
         ####################### ConvLSTM ###################
@@ -206,9 +204,9 @@ class JointModel(nn.Module):
         ####################################################
 
         ##################### Conv3D ######################
-        ## level_features = torch.stack(joint_features, dim=2)
-        ## fused_feature = self.activation(self.conv_3d(level_features)).permute(0, 2, 1, 3, 4)
-        ## fused_feature = fused_feature.squeeze(1)
+        level_features = torch.stack(joint_features, dim=2)
+        fused_feature = self.activation(self.conv_3d(level_features)).permute(0, 2, 1, 3, 4)
+        fused_feature = fused_feature.squeeze(1)
         ###################################################
 
         ################## Baseline ####################

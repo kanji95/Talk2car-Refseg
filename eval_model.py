@@ -99,14 +99,6 @@ def evaluate(image_encoder, joint_model, val_loader, args):
     prec_at_x = {0.5: 0, 0.6: 0, 0.7: 0, 0.8: 0, 0.9: 0}
     prec_dcrf_at_x = {0.5: 0, 0.6: 0, 0.7: 0, 0.8: 0, 0.9: 0}
 
-    ## updated_sen = []
-    ## with open('/home/kanishk/vigil/autonomous_grounding/dataloader/updated_annotation_sentences.txt', 'r') as f:
-    ##     for line in f.readlines():
-    ##         updated_sen.append(line.strip())
-
-    # wrong_idx = [120, 106, 82, 212, 135, 227, 237, 58, 141, 165, 22, 307, 215, 129, 233, 75, 373, 336, 348, 347, 132, 4, 146, 241, 267, 343, 384, 79, 204, 296, 350, 352, 155, 272, 244, 217, 220, 43, 314, 181, 306, 20, 78, 297, 122, 137, 148, 372, 31, 208, 290, 60, 89, 256, 218, 221, 282, 168, 34, 349, 231, 281, 400, 17, 301, 205, 207, 203, 72, 88, 247, 54, 299, 269, 196, 300, 46, 442, 119, 70]
-
-    # omitted_idx = random.choices(wrong_idx, k=30)
 
     data_len = len(val_loader)
     for step, batch in enumerate(val_loader):
@@ -116,12 +108,6 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         phrase = batch["phrase"].cuda(non_blocking=True)
         phrase_mask = batch["phrase_mask"].cuda(non_blocking=True)
         index = batch["index"]
-
-        ## if index.item() < 101:
-        ##     batch["orig_phrase"] = updated_sen[index.item()]
-        ##     phrase, phrase_mask = val_loader.dataset.vocabulary.tokenize(batch["orig_phrase"])
-        ##     phrase = phrase.unsqueeze(0).cuda(non_blocking=True)
-        ##     phrase_mask = phrase_mask.unsqueeze(0).cuda(non_blocking=True)
 
         gt_mask = batch["seg_mask"]
         gt_mask = gt_mask.squeeze(dim=1)
@@ -177,11 +163,6 @@ def evaluate(image_encoder, joint_model, val_loader, args):
         elif args.metric == "dice_score":
             accuracy = dice_score(output_mask, gt_mask, args.mask_thresh)
        
-        # if index.item() in omitted_idx:
-        #     continue
-            # wrong_idx.append(index.item())
-            # print(index.item(), sep=",")
-
         total_inter += inter.sum().item()
         total_union += union.sum().item()
         
@@ -328,14 +309,15 @@ def main():
         vocab_size=vocab_size,
     )
 
+    if n_gpu > 1:
+        image_encoder = nn.DataParallel(image_encoder)
+        joint_model = nn.DataParallel(joint_model)
+
     state_dict = torch.load(args.model_path)
     if "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
 
     joint_model.load_state_dict(state_dict)
-
-    if n_gpu > 1:
-        image_encoder = nn.DataParallel(image_encoder)
 
     joint_model.to(device)
     image_encoder.to(device)
