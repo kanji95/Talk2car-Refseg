@@ -50,10 +50,6 @@
 91 continue straight passing the brown box on the left.
 92 wait for the construction worker to clear the road.
 93 stay stopped.
-94 stay stopped.
-102 stay stopped
-103 stay stopped.
-104 stay stopped.
 105 turn left slightly and continue.
 107 drive straight passing the bicycle on the left.
 108 drive straight passing the pedestrian on the left.
@@ -76,7 +72,6 @@
 132 park next to the second barrier on the right.
 134 turn into the garage on the right side of that forklift truck.
 135 stop right behind the truck
-136 stop right behind this truck i need to get out here.
 137 park after the first concrete barrier
 138 pull over and stop behind the forklift
 140 turn left just after the black suv
@@ -222,8 +217,6 @@
 520 go left and follow the black car
 521 turn around before that car in front of us leaves 
 524 stay behind that car in front of us
-525 stay behind that car in front of us 
-526 stay behind that car in front of us
 527 switch lanes and follow that gray car two lanes to the left
 528 park near the group of vehicles.
 529 park before the stationary truck on our right.
@@ -232,8 +225,6 @@
 548 stop next to that man.
 556 turn right where the man is standing.
 557 switch to the left lane in order to avoid the object obstructing the current lane
-558 switch to the left lane in order to avoid the object obstructing the current lane
-559 switch to the left lane in order to avoid the object obstructing the current lane
 560 switch to the left lane in order to follow the suv
 562 stop to pick up that person.
 569 slow down to let the bicyclist pass.

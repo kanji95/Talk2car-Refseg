@@ -82,7 +82,7 @@ class JointModel(nn.Module):
         ################################################################
 
         ############################### Conv3D #########################
-        self.conv_3d = nn.Sequential(nn.Conv3d(out_channels, out_channels, 3, padding=(0, 1, 1)), nn.BatchNorm3d(out_channels))
+        ## self.conv_3d = nn.Sequential(nn.Conv3d(out_channels, out_channels, 3, padding=(0, 1, 1)), nn.BatchNorm3d(out_channels))
         ################################################################
 
         ############### CMMLF ######################
@@ -103,14 +103,14 @@ class JointModel(nn.Module):
 
         ### with Baseline in_channels = 512 * 3
         self.aspp_decoder = ASPP(
-            in_channels=out_channels, atrous_rates=[6, 12, 24], out_channels=1024
+            in_channels=out_channels * 3, atrous_rates=[6, 12, 24], out_channels=1024
         )
 
         self.conv_upsample = ConvUpsample(
             in_channels=1024,
             out_channels=1,
-            channels=[256, 256],
-            upsample=[True, True],
+            channels=[512, 256, 128],
+            upsample=[True, True, True],
             drop=dropout,
         )
 
@@ -204,19 +204,16 @@ class JointModel(nn.Module):
         ####################################################
 
         ##################### Conv3D ######################
-        level_features = torch.stack(joint_features, dim=2)
-        fused_feature = self.activation(self.conv_3d(level_features)).permute(0, 2, 1, 3, 4)
-        fused_feature = fused_feature.squeeze(1)
+        ## level_features = torch.stack(joint_features, dim=2)
+        ## fused_feature = self.activation(self.conv_3d(level_features)).permute(0, 2, 1, 3, 4).squeeze(1)
         ###################################################
 
         ################## Baseline ####################
-        ## fused_feature = torch.cat(joint_features, dim=1)
+        fused_feature = torch.cat(joint_features, dim=1)
         ################################################
 
         x = self.aspp_decoder(fused_feature)
         x = self.upsample(self.conv_upsample(x)).squeeze(1)
-
-        ## x = (1 + x)/2
        
         return x
 

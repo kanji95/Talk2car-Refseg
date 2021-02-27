@@ -36,8 +36,8 @@ def evaluate(
     feature_dim = 14
     data_len = val_loader.dataset.__len__()
 
-	if epochId == 0:
-	    print(f'Validation data length: {data_len}')
+    if epochId == 0:
+        print(f'Validation data length: {data_len}')
 
     n_iter = 0
     epoch_start = time()
@@ -72,7 +72,7 @@ def evaluate(
 
         total_accuracy += pointing_game(mask, gt_mask)
 
-		n_iter += batch_size
+        n_iter += batch_size
 
         total_loss += float(loss.item())
 

@@ -40,7 +40,8 @@ def train(
 
     n_iter = 0
     data_len = train_loader.dataset.__len__()
-	if epochId == 0:
+
+    if epochId == 0:
         print(f'Train data length: {data_len}')
 
     for step, batch in enumerate(train_loader):

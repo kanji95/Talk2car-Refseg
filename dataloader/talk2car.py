@@ -98,7 +98,7 @@ class Talk2Car(data.Dataset):
 
         with open(img_path, "rb") as f:
             img = Image.open(f).convert("RGB")
-        ## output["orig_image"] = np.array(img.resize((448, 448)))
+        output["orig_image"] = np.array(img.resize((448, 448)))
 
         if self.transform is not None:
             img = self.transform(img)
