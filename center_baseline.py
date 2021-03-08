@@ -13,7 +13,7 @@ correct = 0
 total = 0
 
 for mask_file in mask_files:
-    if "val" not in mask_file:
+    if "test" not in mask_file:
         continue
 
     mask_path = os.path.join(mask_dir, mask_file)

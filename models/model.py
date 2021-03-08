@@ -75,7 +75,7 @@ class JointModel(nn.Module):
         self.transformer_encoder = TransformerEncoder(
             encoder_layer, num_encoder_layers, encoder_norm
         )
-        ######################################
+        ###################################
 
         ########################## W/O CMMLF #############################
         self.conv_fuse = nn.Sequential(nn.Conv2d(out_channels * 2, out_channels, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(out_channels))
@@ -167,7 +167,7 @@ class JointModel(nn.Module):
                 src, pos=pos_embed, src_key_padding_mask=src_key_padding_mask
             )
             enc_out = enc_out.permute(1, 2, 0)
-            #####################################################
+            ##################################################
 
             ################## Only CMMLF ######################
             ## enc_out = src.permute(1, 2, 0)

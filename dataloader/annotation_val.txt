@@ -176,6 +176,7 @@
 355 turn left after the silver sedan goes
 360 slow down as we pass that bike.
 364 turn right just before where that man is.
+371 continue straight so i can talk to that person
 372 that is who i need to pick up, go straight on towards that man.
 373 find a place to park near that yellow suv
 374 there is a place! park next to that black car
@@ -184,7 +185,7 @@
 385 park near the black car
 388 once that pedestrian has crossed the road we can turn left
 389 there is a van straight in front of us, go around it.
-390 wait for the moped to continue before we turn left
+390 wait for the moped to leave
 393 turn left after that person crosses the street
 397 pull over and park behind this car.
 401 follow this bus to it is next stop
@@ -327,3 +328,174 @@
 870 park near that man
 878 turn right after the first vehicle on the right.
 881 slow and allow truck to pass.
+882 park near pedestrian on the left.
+883 stop and allow the truck to go first. 
+884 go around the truck in front.
+885 stop for the truck.
+886 go left around the trcuk in front.
+887 make a you-turn over there.
+889 park after that black car
+890 turn left before that truck.
+892 park next to that truck.
+893 park next to the first white car.
+894 pull over near that person in pink. 
+895 stop for that person to cross.
+896 drop me off near that person.
+897 slow down.
+898 stop near that person.
+901 turn where that woman is walking.
+903 speed up a little.
+904 pull over on the left near this woman.
+905 stop if this woman walks out into traffic.
+906 turn to the left and pull over to the curb near that woman
+908 speed up so we can follow that van.
+909 slow down for the man.
+910 turn to the left and stop in front of this man.
+911 pull over to the right near that man.
+912 stop near the man on the right side
+914 follow the car.
+915 go straight once the person has crossed the street.
+916 stop so the person can cross the street.
+917 park next to the truck on the right
+919 turn left and park to the left of the van.
+923 do a you right here and follow that gray car that is just passing now.
+924 turn right as soon as this pickup passes.
+925 there are two vans across the road from here. park next to the one on the left. 
+926 follow the silver grey car to the right of us.
+929 slow down near that woman. 
+930 slow down as we pass man in the white t-shirt and black pants on the right.
+933 park near the truck.
+934 go on the same road as the grey vehicle in front.
+935 park near the person with the white shirt on our right.
+938 turn right in the same direction as that grey car
+939 stop near that man
+940 follow that car.
+941 drop me off near my colleague on our right side.
+942 follow that white vehicle
+944 evade truck and make a left
+945 turn left next to that orange suv
+946 turn left onto the road with the red car.
+947 turn left onto the road with the white bmw. 
+949 slow down and allow the red car to turn onto the main road
+950 turn left, before the red car.
+953 turn the car around, and follow the white car
+954 park near that man on our left
+955 stop near that person on the left side
+958 follow the vehicle that is in front of us. 
+960 follow the sedan in front of us.
+961 keep following the sedan in front of us.
+965 follow the car ahead of us 
+966 turn in the street where this blue truck is
+968 get closer to the silver sedan in front of us
+970 slow down, this car is braking ahead.
+972 pull up next to the pedestrian over on the left, next to that white car. 
+973 park next to that man
+974 pull up next to that pedestrian on the left.
+978 slow down and pull up behind that truck. 
+983 stop! there is a car in front of us!
+992 follow the direction of that car in front.
+995 move in just in front of the black suv on the right
+996 park in front of the white vehicle.
+999 park near the pedestrian.
+1002 park close to the pedestrian. 
+1003 get behind the vehicle in the other lane. 
+1004 let us park in front of this white car on our right
+1006 get over in the other lane, to the left of that car.
+1007 pull over near that person
+1009 park behind that car on the right
+1010 stop near the man there
+1012 park behind the first car on our right.
+1014 stop near that pedestrian!
+1016 pull over for a moment behind that silver car 
+1018 change direction and stop next to my friend
+1020 pull up next to that woman.
+1022 stop the car, and let this person cross. 
+1024 could you please drop me off in front of that person.
+1025 stop now!
+1026 park behind the first parked car.
+1028 pull to the right and park behind the car
+1029 turn and park behind the car that is in the other lane.
+1031 follow the sedan in front of us.
+1035 turn right. 
+1037 wait until the black suv has passed than turn right
+1038 change destination and turn right like the car in front of us
+1047 stop near that person on the sidewalk.
+1048 park facing the same direction as the car parked on the side of the road.
+1049 stop and let me out near that pedestrian on the sidewalk.
+1050 pull up to the person on the sidewalk.
+1051 get over to that car. 
+1053 slow down as we pass this yellow cab
+1057 turn the car around so that we can follow that woman
+1058 pull up near that person on the path.
+1059 park in front of the white car on the end.
+1060 turn around park in front of the white car.
+1063 stop near that van.
+1064 park in front of the van
+1068 pull in on the opposite side in front of the silverish car.
+1069 pause just after we have passed the van.
+1070 wait here for the car in front to pass.
+1071 take the left turn level with where the taxi is now.
+1075 slow down for that van. 
+1079 slow down as we pass that silver sedan. 
+1081 continue straight further down the road.
+1082 drive slow and watch out for that pedestrian.
+1083 go straight through that intersection.
+1084 slow down, that car is driving over the center lines.
+1086 stop in front of the bus top.
+1087 slow down for the silver vehicle that is turning right.
+1088 stay in the same lane as the car in front of us.
+1089 stop the car near that man
+1090 go near the car in front of us.
+1091 slow down. slow vehicle turning
+1092 slow down. approaching a vehicle ahead
+1093 slow down. pedestrians at bus stop on left
+1095 stop where the person is.
+1096 stop near that woman!
+1098 go left.
+1100 follow the car in front of me.
+1101 pick up the person who is waiting on the corner
+1103 stop and let that person pass then continue driving straight.
+1105 pull over near that pedestrian, he is wearing a white shirt
+1106 stop near the man on the other side of the junction
+1107 wait for the person pushing the trolley to cross the street
+1108 stop near that man in a white shirt
+1109 take a left and follow that grey car
+1110 pick up that person near the tree
+1111 pick up that person carrying the luggage
+1112 go around that black car, then change lanes.
+1118 stay behind the car in front of us. 
+1120 overtake this car just before us
+1121 merge into the left lane behind that car
+1122 pass that black sedan then get back into the outer right lane. 
+1124 after we pass this red car, turn left.
+1125 stop before the first parked car in our lane.
+1126 park in front of this black car
+1127 follow the black car in front
+1128 move to the right and leave space for this car 
+1129 let that car move in front
+1131 stop and park near that white car on the left side of the road
+1134 avoid the car turning toward you and stay on the right side of the lane. 
+1135 stop behind the white car.
+1136 follow the car in front of us and go straight ahead at the intersection. 
+1137 follow the white car up ahead, then turn left. 
+1138 speed up and pass the white car up ahead. 
+1139 turn into the right lane behind the blue car
+1140 turn into the right lane in front of the blue car
+1141 slow down so that you do not hit the van in front. 
+1143 follow the van.
+1144 the van in front is swerving. move to the right lane.
+1145 when the van in front starts to move, speed up as well.
+1146 change lanes and follow the blue car at the right side
+1147 stay here while i get into that van.
+1148 follow the grey vehicle in front of us
+1150 get behind the blue vehicle in the right lane. 
+1151 switch lanes to be behind this white car.
+1153 get behind the white car in the left lane. 
+1154 try to get in front of the car that passed us on the left.
+1156 merge to the left behind the white suv
+1157 move in closer to the car in front of us
+1158 follow the car in front of us
+1159 get closer to the gray suv
+1160 do not move too close to this vehicle in front of us. 
+1161 get closer to this car in front of us
+1162 stop behind the gray car

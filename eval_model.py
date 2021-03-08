@@ -263,7 +263,7 @@ def main():
     elif args.dataset == "talk2car":
         val_dataset = Talk2Car(
             root=args.dataroot,
-            split="val",
+            split=args.split,
             transform=transforms.Compose([resize, to_tensor, normalize]),
             mask_transform=transforms.Compose([ResizeAnnotation(args.mask_dim)]),
             glove_path=args.glove_path,

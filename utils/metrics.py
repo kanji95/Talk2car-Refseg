@@ -43,8 +43,8 @@ def recall_at_k(masks, target, topk=1):
     assert target.shape[-2:] == masks.shape[-2:]
     batch_size = masks.shape[0]
     values, indices = torch.topk(masks.flatten(1), k=topk)
-    if topk == 1:
-        indices = indices.unsqueeze(1)
+    ## if topk == 1:
+    ##     indices = indices.unsqueeze(1)
     target_values = target.flatten(1).gather(1, indices).sum(dim=-1)
     accuracy = (target_values > 0).float().mean().item()
     return accuracy

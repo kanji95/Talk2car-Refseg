@@ -55,18 +55,22 @@ class Talk2Car(data.Dataset):
         self.root = root
         self.split = split
 
-        # import pdb; pdb.set_trace();
-        self.annotations = []
-        for split_ in ["train", "val"]:
-            with open(f"/home/kanishk/vigil/autonomous_grounding/dataloader/annotation_{split_}.txt", "r") as f:
-                for line in f.readlines():
-                    image_id, sentence = int(line.split()[0]), line.split()[1:]
-                    sentence = " ".join(sentence)
-                    self.annotations.append([image_id, sentence, split_])
+        ## # import pdb; pdb.set_trace();
+        ## self.annotations = []
+        ## for split_ in ["train", "val"]:
+        ##     with open(f"/home/kanishk/vigil/autonomous_grounding/dataloader/annotation_{split_}.txt", "r") as f:
+        ##         for line in f.readlines():
+        ##             image_id, sentence = int(line.split()[0]), line.split()[1:]
+        ##             sentence = " ".join(sentence)
+        ##             self.annotations.append([image_id, sentence, split_])
 
         self.data = {}
+        if self.split == "test":
+            data_file = "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_test.json"
+        else:
+            data_file = "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_w_rpn_no_duplicates.json"
         with open(
-            "/home/kanishk/vigil/autonomous_grounding/dataloader/talk2car_w_rpn_no_duplicates.json",
+            data_file,
             "rb",
         ) as f:
             data = json.load(f)[self.split]

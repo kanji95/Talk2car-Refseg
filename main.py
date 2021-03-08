@@ -240,7 +240,7 @@ def main(args):
 
     if n_gpu > 1:
         image_encoder = nn.DataParallel(image_encoder)
-        joint_model = nn.DataParallel(joint_model)
+        ## joint_model = nn.DataParallel(joint_model)
 
     total_parameters = 0
     for name, child in joint_model.named_children():
