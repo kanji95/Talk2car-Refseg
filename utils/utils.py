@@ -20,7 +20,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-import nvidia_smi
+#import nvidia_smi
 
 import wandb
 

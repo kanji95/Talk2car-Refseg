@@ -1,0 +1,39 @@
+22 take this parking spot after the car has left.
+30 pull over the guy standing closest to the curb, next to that car in front of us.
+31 go the same direction as the dark red car in front of you.
+32 turn left after that oncoming car has passed.
+44 make a left where that red car is turning.
+69 turn to the street on the right where the car just came from.
+72 drive in the right lane and get behind that bus up ahead.
+82 pull up alongside the curb here, parallel to that truck.
+91 continue straight passing the brown box on the left.
+122 turn left here, park behind the white van, left of the black car.
+127 park before the first car on the left for 10 minutes.
+134 turn into the garage on the right side of that forklift truck.
+136 stop right behind this truck i need to get out here.
+175 turn right at the intersection just beyond the barrier on the sidewalk.
+208 after the stop sign, keep going straight
+271 keep going straight and follow the red van in front of us
+268 then turn left when it is safe
+289 pull into where that box truck is
+290 turn left where that man
+336 turn where that car is coming from the left.
+372 that is who i need to pick up, go straight on towards that man.
+374 there is a place! park next to that black car
+389 there is a van straight in front of us, go around it.
+390 wait for the moped to continue before we turn left
+393 turn left after that person crosses the street
+401 follow this bus to it is next stop
+414 that bus has stopped, drive around it and continue straight
+415 pull up alongside the curb. we need to pick up the pedestrian on the right that is closest to us.
+416 slow down a bit, that bus might pull out into traffic.
+421 turn where available and park behind the car across the road
+423 there is a man wearing shorts on the left side. pick up him
+436 pull up next to the guy on the left, let us pick him up
+442 stop if pedestrian gets in front of vehicle.
+447 stay in the right lane, so not to get to close to that guy.
+93 stay stopped.
+94 stay stopped.
+102 stay stopped
+103 stay stopped.
+104 stay stopped.
