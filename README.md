@@ -10,6 +10,7 @@ Official PyTorch implementation | [Paper](https://ieeexplore.ieee.org/document/9
 ## Dataset
 
 Download [Talk2Car-RefSeg](https://drive.google.com/file/d/1kNEtbmV_777l8FxYig9WnxYH_E6W-4jH/view?usp=sharing) dataset
+Test Split: [Talk2Car-RefSeg-test](https://drive.google.com/file/d/1MfqICRBlRNNC0YBqf48HeOkYjWtbt-Ft/view?usp=sharing)
 
 ## Dependencies
 
